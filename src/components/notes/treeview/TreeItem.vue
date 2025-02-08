@@ -20,7 +20,7 @@
     
   </div>
 
-  <Modal v-if="modals.showEditModal" :visible="modals.showEditModal" @close="closeAllModals" :title="modals.editModalTitle">
+  <Modal v-if="modals.showEditModal" :visible="modals.showEditModal" @close="modals.showEditModal = false" :title="modals.editModalTitle">
     <div>
       <p>edit folder</p>
       <input type="text" v-model="newFolderName" :placeholder="item.name" />
@@ -31,7 +31,7 @@
     </div>
   </Modal>
 
-  <Modal v-if="modals.showAddModal" :visible="modals.showAddModal" @close="closeAllModals" :title="modals.addModalTitle">
+  <!-- <Modal v-if="modals.showAddModal" :visible="modals.showAddModal" @close="modals.showAddModal = false" :title="modals.addModalTitle">
     <div>
       <p>add folder</p>
       <input type="text" v-model="newFolderName" placeholder="please enter a folder name" />
@@ -40,9 +40,9 @@
         <button @click="addItem">Add</button>
       </div>
     </div>
-  </Modal>
+  </Modal> -->
 
-  <Modal v-if="modals.showDeleteModal" :visible="modals.showDeleteModal" @close="closeAllModals" :title="modals.deleteModalTitle">
+  <Modal v-if="modals.showDeleteModal" :visible="modals.showDeleteModal" @close="modals.showDeleteModal = false" :title="modals.deleteModalTitle">
     <div>
       <p>are you sure you want to delete the folder <span class="folder-name">{{ item.name }}</span>?</p>
       <div class="modal-button-container">
@@ -51,12 +51,40 @@
       </div>
     </div>
   </Modal>
+
+  <Modal v-if="modals.showAddModal" :visible="modals.showAddModal" @close="modals.showAddModal = false" :title="modals.addModalTitle">
+    <div>
+      <label for="itemType">Select Type:</label>
+      <select id="itemType" v-model="selectedType">
+        <option value="" disabled>Select an option</option>
+        <option value="folder">Folder</option>
+        <option value="file">File</option>
+      </select>
+    </div>
+
+    <div v-if="selectedType === 'file'">
+      <label for="fileType">File Type:</label>
+      <select id="fileType" v-model="selectedFileType">
+        <option value="" disabled>Select a file type</option>
+        <option v-for="ft in fileTypes" :key="ft">{{ ft }}</option>
+      </select>
+      <input id="fileName" v-model="newFileName" placeholder="please enter a file name" />
+    </div>
+
+    <div v-if="selectedType === 'folder'">
+      <label for="folderName">Folder Name:</label>
+      <input id="folderName" v-model="newFolderName" placeholder="please enter a folder name" />
+    </div>
+
+    <button @click="createItem">Confirm</button>
+  </Modal>
   
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { useNoteFolderStore } from '@/stores/note'
+import { useNoteFolderStore } from '@/stores/noteFolder'
+import { useNoteStore } from '@/stores/note'
 import Modal from '@/common/Modal.vue'
 
 export default {
@@ -79,6 +107,10 @@ export default {
       isExpanded: false,
       showFolderButtons: false,
       newFolderName: '',
+      newFileName: '',
+      selectedType: '',
+      selectedFileType: '',
+      fileTypes: ['Markdown', 'Text', 'Docx'],
 
       modals: {
         showEditModal: false,
@@ -86,7 +118,7 @@ export default {
         showDeleteModal: false,
         deleteModalTitle: 'Delete Folder',
         showAddModal: false,
-        addModalTitle: 'Add Folder',
+        addModalTitle: 'Add Folder/File',
       }
     }
   },
@@ -107,11 +139,8 @@ export default {
       if (this.isFolder) {
         this.isExpanded = !this.isExpanded
       }
-      if (this.item.id === this.selectedNoteFolder) {
-        this.setSelectedNoteFolder(null)
-      } else {
-        this.setSelectedNoteFolder(this.item.id)
-      }
+      this.setSelectedNoteFolder(this.item.id)
+
     },
     deleteItem() {
       console.log('deleteItem', this.item)
@@ -121,12 +150,24 @@ export default {
       this.modals.showDeleteModal = false
     },
     addItem() {
-      console.log('addItem', this.item, this.item.id)
-      this.createNoteFolder(this.newFolderName, this.item.id)
-
-      // close the modal and reset the input
-      this.modals.showAddModal = false
-      this.newFolderName = ''
+      this.selectedType = ''
+      this.selectedFileType = ''
+      this.showModal = true
+    },
+    createItem() {
+      if (!this.selectedType) return
+      if (this.selectedType === 'folder') {
+        // e.g. logic to create a folder
+        this.createNoteFolder(this.newFolderName, this.item.id)
+      } else if (this.selectedType === 'file') {
+        // e.g. logic to create a file with the chosen file type
+        // this.createNoteFile('File Name', this.selectedFileType, this.item.id)
+      }
+      // Close modal afterwards
+      this.showModal = false
+    },
+    closeModal() {
+      this.showModal = false
     },
     editItem(){
       console.log('editItem', this.item)
@@ -200,8 +241,10 @@ export default {
 }
 
 .selected {
-  border: 2px solid #2196F3;
-  border-radius: 4px;
+  /* border: 2px solid #2196F3;
+  border-radius: 4px; */
+  box-shadow: inset 0 0 0 2px lightcoral;
+  border-radius: 2px;
   transition: border 0.2s;
 }
 </style>

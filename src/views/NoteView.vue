@@ -30,7 +30,7 @@
 import Notes from '@/components/notes/Notes.vue'
 import TreeView from '@/components/notes/treeview/TreeView.vue';
 import { mapActions, mapState } from 'pinia';
-import { useNoteFolderStore } from '@/stores/note';
+import { useNoteFolderStore } from '@/stores/noteFolder';
 
 export default {
     name: 'NoteView',
