@@ -30,18 +30,6 @@
       </div>
     </div>
   </Modal>
-
-  <!-- <Modal v-if="modals.showAddModal" :visible="modals.showAddModal" @close="modals.showAddModal = false" :title="modals.addModalTitle">
-    <div>
-      <p>add folder</p>
-      <input type="text" v-model="newFolderName" placeholder="please enter a folder name" />
-      <div class="modal-button-container">
-        <button @click="closeAllModals">Close</button>
-        <button @click="addItem">Add</button>
-      </div>
-    </div>
-  </Modal> -->
-
   <Modal v-if="modals.showDeleteModal" :visible="modals.showDeleteModal" @close="modals.showDeleteModal = false" :title="modals.deleteModalTitle">
     <div>
       <p>are you sure you want to delete the folder <span class="folder-name">{{ item.name }}</span>?</p>
@@ -124,6 +112,7 @@ export default {
   },
   computed: {
     ...mapState(useNoteFolderStore, ['noteFolders', 'selectedNoteFolder']),
+    ...mapState(useNoteStore, ['fileFormats']),
     isFolder() {
       return ((this.item.children && this.item.children.length) || (this.item.type == 'folder'))
     },
@@ -135,6 +124,7 @@ export default {
   },
   methods: {
     ...mapActions(useNoteFolderStore, ['createNoteFolder', 'deleteNoteFolder', 'setSelectedNoteFolder']),
+    ...mapActions(useNoteStore, ['createNote']),
     toggle() {
       if (this.isFolder) {
         this.isExpanded = !this.isExpanded
@@ -162,6 +152,7 @@ export default {
       } else if (this.selectedType === 'file') {
         // e.g. logic to create a file with the chosen file type
         // this.createNoteFile('File Name', this.selectedFileType, this.item.id)
+        this.createNote(this.newFileName, this.selectedFileType, this.item.id)
       }
       // Close modal afterwards
       this.showModal = false
