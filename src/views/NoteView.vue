@@ -31,6 +31,7 @@ import Notes from '@/components/notes/Notes.vue'
 import TreeView from '@/components/notes/treeview/TreeView.vue';
 import { mapActions, mapState } from 'pinia';
 import { useNoteFolderStore } from '@/stores/noteFolder';
+import { useNoteStore } from '@/stores/note';
 
 export default {
     name: 'NoteView',
@@ -45,19 +46,20 @@ export default {
             minWidthLeftContainer: 130,
             maxWidthLeftContainer: 400,
             currentNote: 'test',
+            sortedNotes: {},
             treeData: []
         }
     },
     computed: {
         ...mapState(useNoteFolderStore, ['noteFolders']),
-        
+        ...mapState(useNoteStore, ['notes']),
     },
     async created() {
         try {
             await this.fetchNoteFolders();
-            console.log('noteFolders', this.noteFolders)
-            console.log('converted', this.convertToTreeData(this.noteFolders))
-            this.treeData = this.convertToTreeData(this.noteFolders)
+            await this.fetchNotes();
+
+            this.treeData = this.buildTree( this.noteFolders, this.notes)
             // Update treeData with the fetched folders if needed
         } catch (error) {
             console.error('Error fetching note folders:', error);
@@ -73,6 +75,7 @@ export default {
     },
     methods: {
         ...mapActions(useNoteFolderStore, ['fetchNoteFolders']),
+        ...mapActions(useNoteStore, ['fetchNotes']),
         startDragging() {
             this.isDragging = true
         },
@@ -86,23 +89,58 @@ export default {
                 this.leftWidth = Math.min(Math.max(newWidth, this.minWidthLeftContainer), this.maxWidthLeftContainer)
             }
         },
-        convertToTreeData(noteFolders, parent_id = null) {
-            if (!noteFolders) return [];
-            return noteFolders.filter(folder => folder.parent_id == parent_id).map(folder => ({
-                name: folder.name,
-                type: 'folder',
-                id: folder.id,
-                children: this.convertToTreeData(noteFolders, folder.id)
-            }))
-        }
+        buildTree(noteFolders, notes){
 
+            const folderMap = {}
+            const tree = []
+
+            noteFolders.forEach((folder) => {
+                const node = {
+                    id: folder.id,
+                    name: folder.name,
+                    type: 'folder',  // Changed to 'folder' instead of folder.type
+                    children: []     // Fixed typo from 'childen'
+                }
+                folderMap[folder.id] = node
+            })
+
+            this.noteFolders.forEach((folder) => {
+                const node = folderMap[folder.id];
+                if (folder.parent_id != null && folderMap[folder.parent_id]) {
+                    folderMap[folder.parent_id].children.push(node);
+                }
+                else{
+                    tree.push(node);
+                }
+            })
+            
+            this.notes.forEach((note) => {
+                const noteNode = {
+                    id: note.id,
+                    name: note.name,
+                    type: 'file',
+                    content: null,
+                };
+                folderMap[note.folder_id].children.push(noteNode);
+
+            })
+
+            return tree
+        }
+        
     },
     watch: {
         noteFolders: {
-            handler(newFolders) {
-                this.treeData = this.convertToTreeData(newFolders);
+            handler() {
+                this.treeData = this.buildTree(this.noteFolders, this.notes);
             },
-            immediate: true // This will run the handler immediately on component creation
+            immediate: true
+        },
+        notes: {
+            handler() {
+                this.treeData = this.buildTree(this.noteFolders, this.notes);
+            },
+            immediate: true
         }
     }
 }

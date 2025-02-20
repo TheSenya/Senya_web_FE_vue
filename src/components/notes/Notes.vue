@@ -3,6 +3,9 @@
         <div class="note-name">
             <input v-model="noteName" type="text" :placeholder="noteName" @input="handleNameChange">
         </div>
+        <div class="test-ws">
+            <input v-model="testws" type="text" placeholder="testws">
+        </div>
         <div class="note-button-container">
             <button class="save-button">save</button>
             <button class="delete-button">delete</button>
@@ -17,6 +20,8 @@
 import TextEditor from '@/common/TextEditor.vue';
 import WebSocketService from '@/services/websocketService';
 import { debounce } from 'lodash';
+import { useAuthStore } from '@/stores/auth';
+import { mapState } from 'pinia';
 
 export default {
     name: 'Notes',
@@ -28,19 +33,21 @@ export default {
             noteName: '',
             noteContent: '',
             noteId: null, // Will be set when creating/loading a note
-            lastReceivedUpdate: null
+            lastReceivedUpdate: null,
+            testws: '123'
         }
     },
     created() {
         // Connect to WebSocket when component is created
-        // WebSocketService.connect();
+        // WebSocketService.connectToRoute(`/note/${this.testws}`, this.user.token);
+        WebSocketService.connectToRoute(`${this.testws}`);
         
         // Add message listener
-        // WebSocketService.addMessageListener(this.handleWebSocketMessage);
+        WebSocketService.addMessageListener(this.handleWebSocketMessage);
     },
     beforeUnmount() {
         // Clean up listener when component is destroyed
-        // WebSocketService.removeMessageListener(this.handleWebSocketMessage);
+        WebSocketService.removeMessageListener(this.handleWebSocketMessage);
     },
     methods: {
         handleWebSocketMessage(data) {
@@ -55,10 +62,14 @@ export default {
                     this.noteName = data.name;
                 }
             }
+
+
         },
 
         // Debounced method to send updates
         sendUpdate: debounce(function(update) {
+
+            console.log('Sending update:', update);
             if (!WebSocketService.isConnected) return;
             
             const timestamp = Date.now();
@@ -81,8 +92,11 @@ export default {
             this.sendUpdate({ content: newContent });
         }
     },
+    computed: {
+        ...mapState(useAuthStore, ['user'])
+    },
     watch: {
-        noteContent(newContent) {
+        testws(newContent) {
             this.sendUpdate({ content: newContent });
         }
     }

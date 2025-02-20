@@ -8,7 +8,8 @@ export const useNoteStore = defineStore('note', () => {
     const notes = ref([])
     const currentNote = ref(null)
     const fileFormats = ref([])
-
+    const authStore = useAuthStore()
+    
     const fetchFileFormats = async () => {
         const response = await fetch(`${envVariables.API_BASE_URL}/note/file_formats`)
         const data = await response.json()
@@ -16,12 +17,20 @@ export const useNoteStore = defineStore('note', () => {
     }
 
     const fetchNotes = async () => {
-        
+        const response = await fetch(`${envVariables.API_BASE_URL}/note/${authStore.user.id}`, {
+            headers: {
+                'Authorization': `Bearer ${authStore.user.token}`
+            },
+            credentials: 'include'
+        })
+        const data = await response.json()
+        notes.value = data
+        console.log('notes', notes.value)
     }
 
     const createNote = async (title, fileFormat, folderId) => {
         console.log('createNote start', title, fileFormat, folderId)
-        const authStore = useAuthStore()
+        
         console.log('authStore', authStore.user)
         const response = await fetch(`${envVariables.API_BASE_URL}/note`, {
             method: 'POST',
