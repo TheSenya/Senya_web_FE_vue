@@ -40,7 +40,7 @@ export default {
     created() {
         // Connect to WebSocket when component is created
         // WebSocketService.connectToRoute(`/note/${this.testws}`, this.user.token);
-        WebSocketService.connectToRoute(`${this.testws}`);
+        WebSocketService.connectToRoute(`/ws/${this.testws}`);
         
         // Add message listener
         WebSocketService.addMessageListener(this.handleWebSocketMessage);

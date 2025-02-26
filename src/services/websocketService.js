@@ -111,4 +111,4 @@ class WebSocketService {
 }
 
 // Export a base instance with just the base URL
-export default new WebSocketService('wss://localhost:443/ws/note'); 
+export default new WebSocketService('wss://localhost:443/api/v1/note'); 
