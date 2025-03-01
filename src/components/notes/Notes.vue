@@ -40,7 +40,7 @@ export default {
     created() {
         // Connect to WebSocket when component is created
         // WebSocketService.connectToRoute(`/note/${this.testws}`, this.user.token);
-        WebSocketService.connectToRoute(`/ws/${this.testws}`);
+        WebSocketService.connectToRoute(`/ws/${this.testws}`,  this.user.token);
         
         // Add message listener
         WebSocketService.addMessageListener(this.handleWebSocketMessage);
@@ -48,6 +48,12 @@ export default {
     beforeUnmount() {
         // Clean up listener when component is destroyed
         WebSocketService.removeMessageListener(this.handleWebSocketMessage);
+        
+        // Properly close the WebSocket connection
+        WebSocketService.disconnect();
+        
+        // Log the disconnection for debugging purposes
+        console.log('WebSocket disconnected on component unmount');
     },
     methods: {
         handleWebSocketMessage(data) {

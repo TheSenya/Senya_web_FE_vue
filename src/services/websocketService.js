@@ -11,7 +11,7 @@ class WebSocketService {
     }
 
     // connectToRoute(route, token) {
-    connectToRoute(route) {
+    connectToRoute(route, token) {
         if (this.currentRoute === null){
             // this.currentRoute = `${this.baseUrl}${route}?token=${token}`;
             this.currentRoute = `${this.baseUrl}${route}`;
@@ -34,6 +34,7 @@ class WebSocketService {
                 this.isConnected = true;
                 this.reconnectAttempts = 0;
                 this.reconnectTimeout = 1000;
+                this.sendAuthMessage(token)
             };
 
             this.ws.onclose = () => {
@@ -106,6 +107,18 @@ class WebSocketService {
         const callbacks = this.messageCallbacks.get(this.currentRoute);
         if (callbacks) {
             callbacks.delete(callback);
+        }
+    }
+
+    sendAuthMessage(token) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+                type: 'authenticate',
+                token: token
+            }));
+            console.log('Authentication message sent');
+        } else {
+            console.error('Cannot send auth message - WebSocket not connected');
         }
     }
 }
