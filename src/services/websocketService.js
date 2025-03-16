@@ -2,124 +2,101 @@ class WebSocketService {
     constructor(baseUrl) {
         this.baseUrl = baseUrl;
         this.ws = null;
-        this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
-        this.reconnectTimeout = 1000; // Start with 1 second
         this.isConnected = false;
-        this.messageCallbacks = new Map(); // Changed to Map to store callbacks per route
+        this.callbacks = new Set();
         this.currentRoute = null;
+        this.currentToken = null;
     }
 
-    // connectToRoute(route, token) {
     connectToRoute(route, token) {
-        if (this.currentRoute === null){
-            // this.currentRoute = `${this.baseUrl}${route}?token=${token}`;
-            this.currentRoute = `${this.baseUrl}${route}`;
-        }
-
+        // Store for later use
+        this.currentRoute = route;
+        this.currentToken = token;
+        const fullUrl = `${this.baseUrl}${route}`;
         
-        console.log('Attempting to connect to:', this.currentRoute);
-
+        // Close existing connection if any
+        this.disconnect();
         
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            console.log('Closing existing connection');
-            this.ws.close();
-        }
+        // Create new connection
+        console.log('Connecting to:', fullUrl);
+        this.ws = new WebSocket(fullUrl);
         
-        try {
-            this.ws = new WebSocket(this.currentRoute);
-            console.log('New WebSocket instance created');
-            this.ws.onopen = () => {
-                console.log(`WebSocket Connected to ${route}`);
-                this.isConnected = true;
-                this.reconnectAttempts = 0;
-                this.reconnectTimeout = 1000;
-                this.sendAuthMessage(token)
-            };
-
-            this.ws.onclose = () => {
-                console.log('WebSocket Disconnected');
-                this.isConnected = false;
-                this.attemptReconnect();
-            };
-
-            this.ws.onerror = (error) => {
-                console.error('WebSocket Error:', error);
-            };
-
-            this.ws.onmessage = (event) => {
-                console.log('Received message');
-                const data = JSON.parse(event.data);
-                const callbacks = this.messageCallbacks.get(this.currentRoute) || new Set();
-                callbacks.forEach(cb => cb(data));
-            };
-
-        } catch (error) {
-            console.error('WebSocket Connection Error:', error);
-            this.attemptReconnect();
-        }
+        // Set up event handlers
+        this.ws.onopen = () => {
+            console.log('WebSocket connected');
+            this.isConnected = true;
+            console.log('Sending auth message:', this.currentToken);
+            this.sendAuthMessage(this.currentToken);
+        };
+        
+        this.ws.onclose = () => {
+            console.log('WebSocket disconnected');
+            this.isConnected = false;
+            this.ws = null;
+        };
+        
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error details:', {
+                error,
+                url: fullUrl,
+                readyState: this.ws ? this.ws.readyState : 'no websocket'
+            });
+        };
+        
+        this.ws.onmessage = (event) => {
+            console.log('on message', event.data);
+            console.log('on message type', typeof event.data);
+            let data;
+            if (typeof event.data !== 'string') {
+                data = JSON.stringify(event.data);
+                console.log('on message stringified', data);
+            } else {
+                data = event.data;
+            }
+            console.log('Message received:', data);
+            this.callbacks.forEach(callback => callback(data));
+        };
     }
-
-    attemptReconnect() {
-        if (this.reconnectAttempts < this.maxReconnectAttempts && this.currentRoute) {
-            setTimeout(() => {
-                console.log(`Attempting to reconnect... (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
-                this.reconnectAttempts++;
-                this.reconnectTimeout *= 2; // Exponential backoff
-                this.connectToRoute(this.currentRoute);
-            }, this.reconnectTimeout);
-        }
-    }
-
-    sendMessage(message) {
-        console.log('Sending message fnc', this.ws, this.ws.readyState);
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify(message));
-        }
-    }
-
-    onMessage(callback) {
-        if (this.ws) {
-            this.ws.onmessage = (event) => {
-                callback(JSON.parse(event.data));
-            };
-        }
-    }
-
+    
     disconnect() {
         if (this.ws) {
+            console.log('Closing WebSocket connection');
             this.ws.close();
+            this.ws = null;
+            this.isConnected = false;
         }
     }
+    
+    sendMessage(message) {
+        console.log('Sending message:', message);
 
-    addMessageListener(callback) {
-        if (!this.currentRoute) return;
+        if (!this.isConnected) {
+            console.warn('Cannot send message: WebSocket not connected');
+            return;
+        }
+
+        if (typeof message !== 'string') {
+            message = JSON.stringify(message);
+        }
         
-        if (!this.messageCallbacks.has(this.currentRoute)) {
-            this.messageCallbacks.set(this.currentRoute, new Set());
-        }
-        this.messageCallbacks.get(this.currentRoute).add(callback);
+        this.ws.send(message);
+        console.log('Message sent:', message);
     }
-
-    removeMessageListener(callback) {
-        if (!this.currentRoute) return;
-        
-        const callbacks = this.messageCallbacks.get(this.currentRoute);
-        if (callbacks) {
-            callbacks.delete(callback);
-        }
-    }
-
+    
     sendAuthMessage(token) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-                type: 'authenticate',
-                token: token
-            }));
-            console.log('Authentication message sent');
-        } else {
-            console.error('Cannot send auth message - WebSocket not connected');
-        }
+        console.log('Sending auth message:', token);
+        this.sendMessage({
+            type: 'authenticate',
+            token: token
+        });
+    }
+    
+    addMessageListener(callback) {
+        this.callbacks.add(callback);
+    }
+    
+    removeMessageListener(callback) {
+        this.callbacks.delete(callback);
     }
 }
 

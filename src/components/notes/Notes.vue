@@ -5,6 +5,8 @@
         </div>
         <div class="test-ws">
             <input v-model="testws" type="text" placeholder="testws">
+            <button @click="closeWebsocket">closews</button>
+            <button @click="openWebsocket">openws</button>
         </div>
         <div class="note-button-container">
             <button class="save-button">save</button>
@@ -13,6 +15,7 @@
     </div>
     <div class="editor-container">
         <TextEditor v-model:content="noteContent"></TextEditor>
+        
     </div>
 </template>
 
@@ -34,16 +37,14 @@ export default {
             noteContent: '',
             noteId: null, // Will be set when creating/loading a note
             lastReceivedUpdate: null,
-            testws: '123'
+            testws: '123',
+            closews: false
         }
     },
     created() {
         // Connect to WebSocket when component is created
         // WebSocketService.connectToRoute(`/note/${this.testws}`, this.user.token);
-        WebSocketService.connectToRoute(`/ws/${this.testws}`,  this.user.token);
-        
-        // Add message listener
-        WebSocketService.addMessageListener(this.handleWebSocketMessage);
+
     },
     beforeUnmount() {
         // Clean up listener when component is destroyed
@@ -96,6 +97,17 @@ export default {
         // Watch for content changes from TextEditor
         onContentChange(newContent) {
             this.sendUpdate({ content: newContent });
+        },
+
+        closeWebsocket() {
+            this.closews = !this.closews;
+            console.log('closews', this.closews);
+            WebSocketService.disconnect();
+        },
+        openWebsocket() {
+            console.log('openWebsocket', `/ws/${this.testws}`, this.user.token);
+            WebSocketService.connectToRoute(`/ws/${this.testws}`,  this.user.token);
+            WebSocketService.addMessageListener(this.handleWebSocketMessage);
         }
     },
     computed: {

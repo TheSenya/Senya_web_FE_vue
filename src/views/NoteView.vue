@@ -89,12 +89,12 @@ export default {
                 this.leftWidth = Math.min(Math.max(newWidth, this.minWidthLeftContainer), this.maxWidthLeftContainer)
             }
         },
-        buildTree(noteFolders, notes){
+        buildTree(){
 
             const folderMap = {}
             const tree = []
 
-            noteFolders.forEach((folder) => {
+            this.noteFolders.forEach((folder) => {
                 const node = {
                     id: folder.id,
                     name: folder.name,
@@ -132,13 +132,13 @@ export default {
     watch: {
         noteFolders: {
             handler() {
-                this.treeData = this.buildTree(this.noteFolders, this.notes);
+                this.treeData = this.buildTree();
             },
             immediate: true
         },
         notes: {
             handler() {
-                this.treeData = this.buildTree(this.noteFolders, this.notes);
+                this.treeData = this.buildTree();
             },
             immediate: true
         }
