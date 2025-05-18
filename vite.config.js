@@ -24,6 +24,15 @@ export default defineConfig({
     https: {
       key: fs.readFileSync('./cert/localhost+1-key.pem'),
       cert: fs.readFileSync('./cert/localhost+1.pem')
+    },
+    cors: true,
+    proxy: {
+      '/api': {
+        target: 'https://localhost:443',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path
+      }
     }
   }
 })
