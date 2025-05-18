@@ -1,10 +1,7 @@
 name: Build and Push Docker Images
 
 on:
-  workflow_dispatch: # for testing purposes
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 env:
@@ -43,20 +40,18 @@ jobs:
         with:
           images: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
+            type=raw,value=latest
             type=sha,format=short
 
-      - name: Build and push development image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.dev
-          push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:dev
-          cache-from: type=gha,scope=dev
-          cache-to: type=gha,scope=dev,mode=max
+      # - name: Build and push development image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     file: ./Dockerfile.dev
+      #     push: true
+      #     tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:dev-latest
+      #     cache-from: type=gha,scope=dev
+      #     cache-to: type=gha,scope=dev,mode=max
 
       - name: Build and push production image
         uses: docker/build-push-action@v5
