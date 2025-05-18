@@ -58,3 +58,30 @@ npm run test:e2e -- --debug
 ```sh
 npm run lint
 ```
+
+
+Nginx 
+
+```sh
+sudo apt update
+sudo apt install nginx
+```
+```sh
+sudo systemctl start nginx
+sudo systemctl enable nginx
+```
+```sh
+sudo systemctl status nginx
+```
+```sh
+sudo systemctl stop nginx
+```
+
+
+
+```sh
+sudo systemctl restart nginx
+```
+
+
+

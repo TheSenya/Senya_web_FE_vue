@@ -12,6 +12,7 @@
 <script>
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
+import { debounce } from 'lodash'
 
 export default {
     name: 'TextEditor',
@@ -78,10 +79,15 @@ export default {
                 this.editor.root.innerHTML = this.content
             }
 
+            // Debounced change handler
+            const emitChange = debounce((content) => {
+                this.$emit('update:content', content)
+            }, 500) // 500ms delay
+
             // Handle content changes
             this.editor.on('text-change', () => {
                 const content = this.editor.root.innerHTML
-                this.$emit('input', content)
+                emitChange(content)
             })
         }
     },
