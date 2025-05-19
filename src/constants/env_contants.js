@@ -8,6 +8,7 @@ export const envVariables = {
   API_BASE_URL: import.meta.env.MODE === 'production'
       ? import.meta.env.API_BASE_URL_PROD
       : import.meta.env.API_BASE_URL_DEV || '/api/v1',
+
 };
 
 console.log('Calculated API_BASE_URL:', envVariables.API_BASE_URL);
