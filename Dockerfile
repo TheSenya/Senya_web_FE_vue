@@ -24,8 +24,20 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Remove default Nginx configuration
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/nginx.conf
+# Create custom nginx config directly in the Dockerfile
+RUN echo 'server { \
+    listen 80; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    \
+    error_page 404 /index.html; \
+    server_tokens off; \
+}' > /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
