@@ -1,3 +1,4 @@
+console.log('Vite env:', import.meta.env);
 console.log('Vite Mode:', import.meta.env.MODE);
 console.log('Vite PROD flag:', import.meta.env.PROD);
 console.log('API_BASE_URL_PROD from env:', import.meta.env.API_BASE_URL_PROD);
