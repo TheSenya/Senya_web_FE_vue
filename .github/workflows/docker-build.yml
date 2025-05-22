@@ -12,6 +12,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    environment: prod # Targets the 'prod' GitHub Environment for secrets and rules
     permissions:
       contents: read
       packages: write
@@ -34,32 +35,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Extract metadata for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-
-      # - name: Build and push development image
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     file: ./Dockerfile.dev
-      #     push: true
-      #     tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:dev-latest
-      #     cache-from: type=gha,scope=dev
-      #     cache-to: type=gha,scope=dev,mode=max
+      # Removed Docker Metadata Action step
 
       - name: Build and push production image
+        id: build-and-push
+        env:
+          ECR_REGISTRY_STEP_OUTPUT: ${{ steps.login-ecr.outputs.registry }}
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+          context: . # Assuming Dockerfile is at the root of Senya_web_FE_vue
+          file: ./Dockerfile # Path to your frontend Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ env.ECR_REGISTRY_STEP_OUTPUT }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+            ${{ env.ECR_REGISTRY_STEP_OUTPUT }}/${{ env.ECR_REPOSITORY }}:latest
+          # labels: ${{ steps.meta.outputs.labels }} # Removed as docker/metadata-action is removed
           cache-from: type=gha,scope=prod
-          cache-to: type=gha,scope=prod,mode=max 
+          cache-to: type=gha,scope=prod,mode=max
+
+      - name: Print Image URI
+        run: echo "Image pushed to ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
