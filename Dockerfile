@@ -12,9 +12,11 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
+# Create .env.production file with the correct environment variable
+RUN echo "VITE_API_BASE_URL=https://api.senya.ca/api/v1" > .env.production
+
 # Set production environment variables
 ENV NODE_ENV=production
-ENV VITE_API_BASE_URL=https://api.senya.ca/api/v1
 
 # Build the application with production mode
 RUN npm run build -- --mode production
