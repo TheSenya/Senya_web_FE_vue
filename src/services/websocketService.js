@@ -13,14 +13,14 @@ class WebSocketService {
         this.currentRoute = route;
         this.currentToken = token;
         const fullUrl = `${this.baseUrl}${route}`;
-        
+
         // Close existing connection if any
         this.disconnect();
-        
+
         // Create new connection
         console.log('Connecting to:', fullUrl);
         this.ws = new WebSocket(fullUrl);
-        
+
         // Set up event handlers
         this.ws.onopen = () => {
             console.log('WebSocket connected');
@@ -28,13 +28,13 @@ class WebSocketService {
             console.log('Sending auth message:', this.currentToken);
             this.sendAuthMessage(this.currentToken);
         };
-        
+
         this.ws.onclose = () => {
             console.log('WebSocket disconnected');
             this.isConnected = false;
             this.ws = null;
         };
-        
+
         this.ws.onerror = (error) => {
             console.error('WebSocket error details:', {
                 error,
@@ -42,7 +42,7 @@ class WebSocketService {
                 readyState: this.ws ? this.ws.readyState : 'no websocket'
             });
         };
-        
+
         this.ws.onmessage = (event) => {
             console.log('on message', event.data);
             console.log('on message type', typeof event.data);
@@ -57,7 +57,7 @@ class WebSocketService {
             this.callbacks.forEach(callback => callback(data));
         };
     }
-    
+
     disconnect() {
         if (this.ws) {
             console.log('Closing WebSocket connection');
@@ -66,7 +66,7 @@ class WebSocketService {
             this.isConnected = false;
         }
     }
-    
+
     sendMessage(message) {
         console.log('Sending message:', message);
 
@@ -78,11 +78,11 @@ class WebSocketService {
         if (typeof message !== 'string') {
             message = JSON.stringify(message);
         }
-        
+
         this.ws.send(message);
         console.log('Message sent:', message);
     }
-    
+
     sendAuthMessage(token) {
         console.log('Sending auth message:', token);
         this.sendMessage({
@@ -90,15 +90,15 @@ class WebSocketService {
             token: token
         });
     }
-    
+
     addMessageListener(callback) {
         this.callbacks.add(callback);
     }
-    
+
     removeMessageListener(callback) {
         this.callbacks.delete(callback);
     }
 }
 
 // Export a base instance with just the base URL
-export default new WebSocketService('wss://localhost:443/api/v1/note'); 
+export default new WebSocketService('wss://localhost:443/api/v1/note');
