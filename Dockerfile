@@ -12,8 +12,12 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
-# Build the application
-RUN npm run build
+# Set production environment variables
+ENV NODE_ENV=production
+ENV VITE_API_BASE_URL=https://api.senya.ca/api/v1
+
+# Build the application with production mode
+RUN npm run build -- --mode production
 
 # Production stage
 FROM nginx:alpine
@@ -33,7 +37,7 @@ RUN echo 'server { \
     } \
     \
     location /api { \
-        proxy_pass http://localhost:5173; \
+        proxy_pass https://api.senya.ca; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
