@@ -13,8 +13,8 @@
 </template>
 
 <script>
-import LoginForm from '@/components/auth/LoginForm.vue';
-import RegisterForm from '@/components/auth/RegisterForm.vue';
+import LoginForm from '@/components/auth/login/LoginForm.vue';
+import RegisterForm from '@/components/auth/register/RegisterForm.vue';
 
 export default {
     name: 'AuthView',
