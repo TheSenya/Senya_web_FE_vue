@@ -21,6 +21,9 @@ ENV NODE_ENV=production
 # Build the application with production mode
 RUN npm run build -- --mode production
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Production stage
 FROM nginx:alpine
 

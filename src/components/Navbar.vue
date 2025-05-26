@@ -8,6 +8,7 @@
       <router-link to="/notes" class="nav-link">Notes</router-link>
       <router-link to="/workout" class="nav-link">Workout</router-link>
       <router-link to="/taskmanager" class="nav-link">Task Manager</router-link>
+      <router-link to="/todo" class="nav-link">Todo</router-link>
       <router-link to="/about" class="nav-link">About</router-link>
       <div class="auth-links">
         <div v-if="user?.isAuthenticated" class="welcome-container">

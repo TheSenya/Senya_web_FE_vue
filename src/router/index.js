@@ -7,6 +7,7 @@ import NoteView from '@/views/NoteView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import TaskManagerView from '@/views/TaskManagerView.vue'
 import AuthView from '@/views/AuthView.vue'
+import TodoView from '@/views/TodoView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,9 +44,26 @@ const router = createRouter({
           component: TaskManagerView,
         },
         {
+          path: 'todo',
+          name: 'todo',
+          component: TodoView,
+        },
+        {
           path: 'auth',
-          name: 'auth',
           component: AuthView,
+          redirect: '/auth/login',
+          children: [
+            {
+              path: 'login',
+              name: 'login',
+              component: () => import('@/components/auth/login/LoginForm.vue')
+            },
+            {
+              path: 'register',
+              name: 'register',
+              component: () => import('@/components/auth/register/RegisterForm.vue')
+            }
+          ]
         },
         {
           path: '/:pathMatch(.*)*',
