@@ -30,7 +30,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Create custom nginx config
 RUN echo 'server { \
     listen 80; \
-    server_name localhost; \
+    server_name _; \
     \
     location / { \
         root /usr/share/nginx/html; \
