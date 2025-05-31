@@ -1,16 +1,15 @@
 <template>
   <div class="tree-item">
-    <div class="item-label" @mouseenter="toggleFolderButtons" @mouseleave="toggleFolderButtons"
-      :style="{ paddingLeft: `${depth * 20 + 5}px` }" @click="toggle" :class="{ 'selected': isSelected }">
+    <div class="item-label" @mouseenter="toggleFolderButtons" @mouseleave="toggleFolderButtons" @click="toggle" :class="{ 'selected': isSelected }">
     <div class="item-label-container">
       <span v-if="isFolder" class="caret" :class="{ 'caret-down': isExpanded }">▶</span>
       <span v-else class="file-icon">📄</span>
       {{ item.name }}
     </div>
     <div class="button-container" v-if="showFolderButtons">
-      <span v-show="depth > 0" class="delete-button" @click="showDeleteModal">X</span>
-      <span class="add-button" @click="showAddModal">+</span>
-      <span class="edit-button" @click="showEditModal">⛭</span>
+      <Button v-if="depth > 0" icon="pi pi-trash" class="p-button-sm p-button-text p-button-danger" @click.stop="showDeleteModal" />
+      <Button icon="pi pi-plus" class="p-button-sm p-button-text p-button-success" @click.stop="showAddModal" />
+      <Button icon="pi pi-pencil" class="p-button-sm p-button-text p-button-info" @click.stop="showEditModal" />
     </div>
   </div>
   
@@ -74,11 +73,13 @@ import { mapState, mapActions } from 'pinia'
 import { useNoteFolderStore } from '@/stores/noteFolder'
 import { useNoteStore } from '@/stores/note'
 import Modal from '@/common/Modal.vue'
+import Button from 'primevue/button';
 
 export default {
   name: 'TreeItem',
   components: {
-    Modal
+    Modal,
+    Button
   },
   props: {
     item: {
@@ -134,6 +135,8 @@ export default {
     },
     deleteItem() {
       console.log('deleteItem', this.item)
+      console.log(this.item.id)
+      console.log(JSON.stringify(this.noteFolders))
       this.deleteNoteFolder(this.item.id)
 
       // close the modal
@@ -196,11 +199,13 @@ export default {
   transition: background-color 0.2s;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+
+  &:hover {
+    background-color: #828282;
+  }
 }
 
-.item-label:hover {
-  background-color: #f0f0f0;
-}
 
 .caret {
   margin-right: 5px;
@@ -221,19 +226,36 @@ export default {
 }
 
 .button-container {
-
-  .delete-button {
-    margin-right: 5px;
-  }
-
-  .add-button {
-    margin-left: 5px;
-  }
+  display: flex;
+  align-items: center;
 }
 
+.button-container .p-button {
+  margin-left: 4px;
+}
+
+/* Increase the size of icons within the action buttons */
+.button-container .p-button{
+  font-size: 0.7rem; /* Adjust as needed */
+  height: 10px; 
+  width: 10px;
+}
+
+/* Optional: Ensure icon colors from severity classes are prominent enough with p-button-text */
+/* You might not need these if colors are already fine */
+/*
+.button-container .p-button.p-button-danger .p-icon {
+  color: var(--p-button-danger-color, #dc3545); 
+}
+.button-container .p-button.p-button-success .p-icon {
+  color: var(--p-button-success-color, #28a745);
+}
+.button-container .p-button.p-button-info .p-icon {
+  color: var(--p-button-info-color, #17a2b8);
+}
+*/
+
 .selected {
-  /* border: 2px solid #2196F3;
-  border-radius: 4px; */
   box-shadow: inset 0 0 0 2px lightcoral;
   border-radius: 2px;
   transition: border 0.2s;

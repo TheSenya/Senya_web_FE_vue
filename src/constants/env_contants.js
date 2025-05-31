@@ -5,7 +5,7 @@ const envVariables = {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL ||
         (import.meta.env.MODE === 'production' || import.meta.env.PROD
             ? PRODUCTION_API_URL
-            : "http://localhost:5173/api/v1") ||
+            : "http://localhost:8000/api/v1") ||
         PRODUCTION_API_URL  // Final fallback to ensure it's never undefined
 }
 

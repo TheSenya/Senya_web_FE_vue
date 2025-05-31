@@ -1,28 +1,32 @@
 <template>
     <div class="notes-container">
         <div class="title-container">
-            Notes
+            <div class="title-container-left">
+                Notes
+            </div>
+            <div class="title-container-right">
+                <SelectButton v-model="currentMode" :options="modeOptions" optionLabel="label" optionValue="value" />
+            </div>
         </div>
 
-        <div class="note-body-container" ref="container">
-            <div class="left-side-container" :style="{ width: leftWidth + 'px' }">
+        <Splitter style="height: 100%" class="mb-5" @resizeend="onResizeEnd">
+            <SplitterPanel :size="leftPanelSize" :minSize="100">
                 <TreeView :items="treeData" />
-            </div>
-            <div class="divider" @mousedown="startDragging"/>
-                
-            <div class="right-side-container">
-                <div v-if="this.treeData == []" class="loader-container">
+            </SplitterPanel>
+            <SplitterPanel :size="100 - leftPanelSize" :min-size="100">
+                <div v-if="!treeData || treeData.length === 0" class="loader-container">
+                    <!-- Consider using a PrimeVue loader/skeleton here -->
                     hello
                 </div>
-                <div v-else-if="this.currentNote == ''" class="note-not-selected-container">
-123
+                <div v-else-if="currentNote === ''" class="note-not-selected-container">
+                    123
                 </div>
                 <div v-else class="note-container">
                     <Notes/>
+                    <!-- TODO: implement view and edit switcher -->
                 </div>
-                
-            </div>
-        </div>
+            </SplitterPanel>
+        </Splitter>
     </div>
 </template>
 
@@ -33,21 +37,33 @@ import { mapActions, mapState } from 'pinia';
 import { useNoteFolderStore } from '@/stores/noteFolder';
 import { useNoteStore } from '@/stores/note';
 
+import SelectButton from 'primevue/selectbutton';
+import Splitter from 'primevue/splitter';
+import SplitterPanel from 'primevue/splitterpanel';
+
 export default {
     name: 'NoteView',
     components:{
         Notes,
-        TreeView
+        TreeView,
+        SelectButton,
+        Splitter,
+        SplitterPanel
     },
     data() {
         return {
-            leftWidth: 200,
-            isDragging: false,
-            minWidthLeftContainer: 130,
-            maxWidthLeftContainer: 400,
+            leftWidth: 200, // Initial width, will be controlled by Splitter's size prop
+            leftPanelSize: 20, // Percentage for the left panel
+            minWidthLeftContainer: 130, // Keep for reference if needed for minSize logic
+            maxWidthLeftContainer: 400, // Keep for reference if needed
             currentNote: 'test',
             sortedNotes: {},
-            treeData: []
+            treeData: [],
+            currentMode: 'view',
+            modeOptions: [
+                { label: 'View', value: 'view' },
+                { label: 'Edit', value: 'edit' }
+            ]
         }
     },
     computed: {
@@ -66,33 +82,26 @@ export default {
         }
     },
     mounted() {
-        document.addEventListener('mousemove', this.handleDragging)
-        document.addEventListener('mouseup', this.stopDragging)
+        // Remove old event listeners for dragging
     },
     beforeDestroy() {
-        document.removeEventListener('mousemove', this.handleDragging)
-        document.removeEventListener('mouseup', this.stopDragging)
+        // Remove old event listeners for dragging
     },
     methods: {
         ...mapActions(useNoteFolderStore, ['fetchNoteFolders']),
         ...mapActions(useNoteStore, ['fetchNotes']),
-        startDragging() {
-            this.isDragging = true
-        },
-        stopDragging() {
-            this.isDragging = false
-        },
-        handleDragging(e) {
-            if (this.isDragging) {
-                const containerRect = this.$refs.container.getBoundingClientRect()
-                const newWidth = e.clientX - containerRect.left
-                this.leftWidth = Math.min(Math.max(newWidth, this.minWidthLeftContainer), this.maxWidthLeftContainer)
-            }
+        onResizeEnd(event) {
+            // event.sizes contains the new sizes of the panels in percentage
+            this.leftPanelSize = event.sizes[0];
+            // If you need to store width in pixels, you might need to calculate it
+            // based on the container width, but PrimeVue handles resizing internally.
         },
         buildTree(){
 
             const folderMap = {}
             const tree = []
+
+            console.log('noteFolders', this.noteFolders)
 
             this.noteFolders.forEach((folder) => {
                 const node = {
@@ -150,52 +159,44 @@ export default {
 .notes-container {
     padding: 20px;
     height: 85vh;
+    display: flex; /* Added for Splitter to take full height */
+    flex-direction: column; /* Added for Splitter to take full height */
 }
 
 .title-container {
-    height: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
 }
 
-.note-body-container {
+.title-container-left {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Removed title-container-right button styling as SelectButton has its own */
+
+.note-body-container { /* This class might be removable if Splitter handles all layout */
     height: 100%;
     display: flex;
     position: relative;
 }
 
-.left-side-container {
-    width: 200px;
-    min-width: 20%;
-    flex: none;
-    border: 1px solid black;
-    border-right: none;
+/* .left-side-container, .divider, .right-side-container are no longer needed
+   as Splitter and SplitterPanel handle this.
+   However, you might want to style the panels themselves if needed.
+*/
+.p-splitter-panel { /* Example to style splitter panels */
+    border: 1px solid #dee2e6; /* PrimeVue's default border color */
 }
 
-.divider {
-    width: 5px;
-    background-color: #a69898;
-    cursor: col-resize;
-    flex: none;
-    position: relative;
+.loader-container, .note-not-selected-container, .note-container {
+    padding: 1rem; /* Added some padding */
+    height: 100%; /* Ensure it fills the panel */
+    overflow: auto; /* If content overflows */
 }
 
-.divider:hover,
-.divider:active {
-    background-color: #db7a7a;
-}
-
-.divider::after {
-    content: '';
-    position: absolute;
-    left: -2px;
-    right: -2px;
-    top: 0;
-    bottom: 0;
-}
-
-.right-side-container {
-    flex: 1;
-    border: 1px solid black;
-    border-left: none;
-    min-width: 100px;
-}
 </style>

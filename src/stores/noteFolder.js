@@ -12,22 +12,29 @@ export const useNoteFolderStore = defineStore('noteFolder', () => {
         selectedNoteFolder.value = noteFolderId
     }
 
+    // get all note folders
     const fetchNoteFolders = async () => {
         console.log('fetchNoteFolders')
 
-        const response = await fetch(`${envVariables.API_BASE_URL}/note_folder`, {
-            headers: {
-                'Authorization': `Bearer ${authStore.user.token}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        })
+        try {
 
-        const data = await response.json()
-        console.log('data', data)
-        noteFolders.value = data
+            const response = await fetch(`${envVariables.API_BASE_URL}/note_folder`, {
+                headers: {
+                    'Authorization': `Bearer ${authStore.user.token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+
+            const data = await response.json()
+            console.log('data', data)
+            noteFolders.value = data
+        } catch (error) {
+            console.error('Error fetching note folders:', error)
+        }
     }
 
+    // create a note folder
     const createNoteFolder = async (folderName, parentId) => {
         console.log('createNoteFolder', folderName, parentId)
 
@@ -50,17 +57,18 @@ export const useNoteFolderStore = defineStore('noteFolder', () => {
             }),
             credentials: 'include'
         })
-        
+
         if (!response.ok) {
             throw new Error('Failed to create folder')
         }
-        
+
         const data = await response.json()
         console.log('createNoteFolder data', data)
         await fetchNoteFolders() // Refresh the folder list
         return data
     }
 
+    // update a note folder
     const updateNoteFolder = async (noteFolderId, newNoteFolderName) => {
         console.log('updateNoteFolder', noteFolderId, newNoteFolderName)
 
@@ -84,11 +92,12 @@ export const useNoteFolderStore = defineStore('noteFolder', () => {
         return response.json()
     }
 
+    // delete a note folder
     const deleteNoteFolder = async (noteFolderId) => {
         console.log('deleteNoteFolder', noteFolderId)
 
         // delete folder
-        const response = await fetch(`${envVariables.API_BASE_URL}/note_folder/${noteFolderId}/${authStore.user.id}`, {
+        const response = await fetch(`${envVariables.API_BASE_URL}/note_folder/${noteFolderId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${authStore.user.token}`,

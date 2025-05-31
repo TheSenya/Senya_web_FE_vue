@@ -1,21 +1,16 @@
 <template>
-    <div class="title-container">
-        <div class="note-name">
-            <input v-model="noteName" type="text" :placeholder="noteName" @input="handleNameChange">
-        </div>
-        <div class="test-ws">
-            <input v-model="testws" type="text" placeholder="testws">
-            <button @click="closeWebsocket">closews</button>
-            <button @click="openWebsocket">openws</button>
-        </div>
-        <div class="note-button-container">
-            <button class="save-button">save</button>
-            <button class="delete-button">delete</button>
-        </div>
-    </div>
+    <Toolbar class="mb-4">
+        <template #start>
+            <InputText v-model="noteName" type="text" :placeholder="noteName || 'Note Name'" @input="handleNameChange" class="p-inputtext-lg" />
+        </template>
+
+        <template #end>
+            <Button label="Save" icon="pi pi-save" class="p-button-success mr-2" @click="saveNote" />
+            <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="deleteNote" />
+        </template>
+    </Toolbar>
     <div class="editor-container">
-        <TextEditor v-model:content="noteContent"></TextEditor>
-        
+        <TextEditor v-model:content="noteContent" @update:content="onContentChange"></TextEditor>
     </div>
 </template>
 
@@ -24,12 +19,22 @@ import TextEditor from '@/common/TextEditor.vue';
 import WebSocketService from '@/services/websocketService';
 import { debounce } from 'lodash';
 import { useAuthStore } from '@/stores/auth';
-import { mapState } from 'pinia';
+import { mapState, mapActions } from 'pinia';
+import { useNoteFolderStore } from '@/stores/noteFolder';
+import { useNoteStore } from '@/stores/note';
+
+
+import Toolbar from 'primevue/toolbar';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
 
 export default {
     name: 'Notes',
     components: {
-        TextEditor
+        TextEditor,
+        Toolbar,
+        InputText,
+        Button
     },
     data() {
         return {
@@ -41,61 +46,16 @@ export default {
             closews: false
         }
     },
-    created() {
-        // Connect to WebSocket when component is created
-        // WebSocketService.connectToRoute(`/note/${this.testws}`, this.user.token);
-
-    },
-    beforeUnmount() {
-        // Clean up listener when component is destroyed
-        WebSocketService.removeMessageListener(this.handleWebSocketMessage);
-        
-        // Properly close the WebSocket connection
-        WebSocketService.disconnect();
-        
-        // Log the disconnection for debugging purposes
-        console.log('WebSocket disconnected on component unmount');
-    },
     methods: {
-        handleWebSocketMessage(data) {
-            // Ignore our own updates
-            if (data.timestamp === this.lastReceivedUpdate) return;
-            
-            if (data.noteId === this.noteId) {
-                if (data.content !== undefined) {
-                    this.noteContent = data.content;
-                }
-                if (data.name !== undefined) {
-                    this.noteName = data.name;
-                }
-            }
-
-
-        },
-
-        // Debounced method to send updates
-        sendUpdate: debounce(function(update) {
-
-            console.log('Sending update:', update);
-            if (!WebSocketService.isConnected) return;
-            
-            const timestamp = Date.now();
-            this.lastReceivedUpdate = timestamp;
-            
-            WebSocketService.sendMessage({
-                type: 'update',
-                noteId: this.noteId,
-                timestamp,
-                ...update
-            });
-        }, 500),
-
+        ...mapActions(useNoteFolderStore, ['createNoteFolder', 'deleteNoteFolder']),
+        ...mapActions(useNoteStore, ['createNote', 'updateNote']),
         handleNameChange() {
             this.sendUpdate({ name: this.noteName });
         },
 
         // Watch for content changes from TextEditor
         onContentChange(newContent) {
+            this.noteContent = newContent; // Ensure noteContent is updated directly
             this.sendUpdate({ content: newContent });
         },
 
@@ -104,39 +64,46 @@ export default {
             console.log('closews', this.closews);
             WebSocketService.disconnect();
         },
-        openWebsocket() {
-            console.log('openWebsocket', `/ws/${this.testws}`, this.user.token);
-            WebSocketService.connectToRoute(`/ws/${this.testws}`,  this.user.token);
-            WebSocketService.addMessageListener(this.handleWebSocketMessage);
+        saveNote(){
+            console.log('Save note', this.noteId, this.noteName, this.noteContent);
+
+            this.createNote(this.noteName, this.noteContent);
+            // Implement save logic here
+            // Potentially send a specific 'save' message via WebSocket or call an API
+        },
+        deleteNote(){
+            console.log('Delete note', this.noteId);
+            // Implement delete logic here
+            // Potentially send a specific 'delete' message via WebSocket or call an API
         }
     },
     computed: {
         ...mapState(useAuthStore, ['user'])
+
     },
     watch: {
-        testws(newContent) {
-            this.sendUpdate({ content: newContent });
-        }
+        // Removed testws watcher as it was for testing websockets
+        // noteContent is now handled by onContentChange from TextEditor
     }
 }
 </script>
 
 <style lang="css" scoped>
-.title-container {
-    display: flex;
-    padding: 10px;
-    justify-content: space-between;
+/* Removed old .title-container styling as Toolbar handles layout */
 
-    /* .note-name{
-
-    } */
-
-    .note-button-container{
-        display: flex;
-        .delete-button{
-            margin-left: 10px;
-        }
-        
-    }
+.editor-container {
+    height: calc(100% - 70px); /* Adjust based on Toolbar height, may need to be dynamic */
+    padding: 0 10px 10px 10px;
 }
+
+/* Add any additional styling for PrimeVue components if needed */
+.p-toolbar {
+    border-radius: 0; /* Optional: remove border-radius if you prefer a flatter look */
+    padding: 0.5rem 1rem; /* Adjust padding as needed */
+}
+
+.mr-2{
+    margin-right: 0.5rem;
+}
+
 </style>
