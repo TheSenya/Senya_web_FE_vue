@@ -80,14 +80,14 @@ export default {
             }
 
             // Debounced change handler
-            const emitChange = debounce((content) => {
-                this.$emit('update:content', content)
-            }, 500) // 500ms delay
+            // const emitChange = debounce((content) => {
+            //     this.$emit('update:content', content)
+            // }, 500) // 500ms delay
 
             // Handle content changes
             this.editor.on('text-change', () => {
                 const content = this.editor.root.innerHTML
-                emitChange(content)
+                // emitChange(content)
             })
         }
     },

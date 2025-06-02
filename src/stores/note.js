@@ -6,7 +6,7 @@ import { useNoteFolderStore } from '@/stores/noteFolder'
 
 export const useNoteStore = defineStore('note', () => {
     const notes = ref([])
-    const currentNote = ref(null)
+    const selectedNote = ref(null)
     const fileFormats = ref([])
     const authStore = useAuthStore()
     
@@ -43,7 +43,7 @@ export const useNoteStore = defineStore('note', () => {
         })
         const data = await response.json()
         console.log('created note', data)
-        // notes.value.push(data)
+        notes.value.push(data)
     }
 
     const updateNote = async (note) => {
@@ -54,8 +54,13 @@ export const useNoteStore = defineStore('note', () => {
 
     }
 
+    const setSelectedNote = async (note) => {
+        selectedNote.value = note
+    }
+    
 
 
-    return { notes, fetchNotes, createNote, updateNote, deleteNote }
+
+    return { notes, selectedNote, fetchNotes, createNote, updateNote, deleteNote, setSelectedNote }
 })
 

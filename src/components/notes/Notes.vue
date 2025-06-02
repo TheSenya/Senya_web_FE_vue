@@ -22,7 +22,7 @@ import { useAuthStore } from '@/stores/auth';
 import { mapState, mapActions } from 'pinia';
 import { useNoteFolderStore } from '@/stores/noteFolder';
 import { useNoteStore } from '@/stores/note';
-
+import { useTreeStore } from '@/stores/tree';
 
 import Toolbar from 'primevue/toolbar';
 import InputText from 'primevue/inputtext';
@@ -43,12 +43,14 @@ export default {
             noteId: null, // Will be set when creating/loading a note
             lastReceivedUpdate: null,
             testws: '123',
-            closews: false
+            closews: false,
+            currentNote: null
         }
     },
     methods: {
         ...mapActions(useNoteFolderStore, ['createNoteFolder', 'deleteNoteFolder']),
         ...mapActions(useNoteStore, ['createNote', 'updateNote']),
+        ...mapState(useTreeStore, ['selectedTreeItem']),
         handleNameChange() {
             this.sendUpdate({ name: this.noteName });
         },
@@ -59,11 +61,11 @@ export default {
             this.sendUpdate({ content: newContent });
         },
 
-        closeWebsocket() {
-            this.closews = !this.closews;
-            console.log('closews', this.closews);
-            WebSocketService.disconnect();
-        },
+        // closeWebsocket() {
+        //     this.closews = !this.closews;
+        //     console.log('closews', this.closews);
+        //     WebSocketService.disconnect();
+        // },
         saveNote(){
             console.log('Save note', this.noteId, this.noteName, this.noteContent);
 
@@ -78,12 +80,23 @@ export default {
         }
     },
     computed: {
-        ...mapState(useAuthStore, ['user'])
-
+        ...mapState(useAuthStore, ['user']),
+        ...mapState(useNoteStore, ['selectedNote']),
+        ...mapState(useTreeStore, ['selectedTreeItem'])
     },
     watch: {
-        // Removed testws watcher as it was for testing websockets
-        // noteContent is now handled by onContentChange from TextEditor
+        // selectedTreeItem: {
+        //     handler(newItem, oldItem) {
+        //         if (newItem.type === 'file') {
+        //             this.noteName = newItem.name
+        //             this.noteContent = newItem.content
+        //         }
+        //         console.log('selectedTreeItem', newItem)
+        //         console.log('selectedNote', this.selectedNote)
+        //         console.log('noteName', this.noteName)
+        //     },
+        //     immediate: true
+        // }
     }
 }
 </script>

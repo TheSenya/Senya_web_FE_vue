@@ -14,7 +14,7 @@
   </div>
   
   <div v-if="isFolder && isExpanded" class="children">
-    <TreeItem v-for="child in item.children" :key="child.name" :item="child" :depth="depth + 1" />
+    <TreeItem v-for="child in item.children" :key="child.name" :item="child" :depth="depth + 1"/>
   </div>
     
   </div>
@@ -70,10 +70,13 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { useNoteFolderStore } from '@/stores/noteFolder'
-import { useNoteStore } from '@/stores/note'
+
 import Modal from '@/common/Modal.vue'
 import Button from 'primevue/button';
+
+import { useTreeStore } from '@/stores/tree';
+import { useNoteFolderStore } from '@/stores/noteFolder'
+import { useNoteStore } from '@/stores/note'
 
 export default {
   name: 'TreeItem',
@@ -113,25 +116,32 @@ export default {
   },
   computed: {
     ...mapState(useNoteFolderStore, ['noteFolders', 'selectedNoteFolder']),
-    ...mapState(useNoteStore, ['fileFormats']),
+    ...mapState(useNoteStore, ['fileFormats', 'selectedNote']),
+    ...mapState(useTreeStore, ['selectedTreeItem']),
     isFolder() {
       return ((this.item.children && this.item.children.length) || (this.item.type == 'folder'))
     },
     isSelected() {
-      console.log('isSelected', this.item.id, this.selectedNoteFolder)
-
-      return this.item.id === this.selectedNoteFolder
+      return this.item.id === this.selectedTreeItem?.id
     },
   },
   methods: {
     ...mapActions(useNoteFolderStore, ['createNoteFolder', 'deleteNoteFolder', 'setSelectedNoteFolder']),
-    ...mapActions(useNoteStore, ['createNote']),
+    ...mapActions(useNoteStore, ['createNote', 'setSelectedNote']),
+    ...mapActions(useTreeStore, ['setSelectedTreeItem']),
     toggle() {
       if (this.isFolder) {
         this.isExpanded = !this.isExpanded
       }
-      this.setSelectedNoteFolder(this.item.id)
 
+      if (this.isFolder) {
+        this.setSelectedNoteFolder(this.item.id)
+      }
+      else  if(this.isFile){
+        this.setSelectedNote(this.item)
+      }
+
+      this.setSelectedTreeItem(this.item)
     },
     deleteItem() {
       console.log('deleteItem', this.item)
@@ -145,7 +155,7 @@ export default {
     addItem() {
       this.selectedType = ''
       this.selectedFileType = ''
-      this.showModal = true
+      this.modals.showAddModal = true
     },
     createItem() {
       if (!this.selectedType) return
@@ -157,11 +167,12 @@ export default {
         // this.createNoteFile('File Name', this.selectedFileType, this.item.id)
         this.createNote(this.newFileName, this.selectedFileType, this.item.id)
       }
+
       // Close modal afterwards
-      this.showModal = false
+      this.modals.showAddModal = false
     },
     closeModal() {
-      this.showModal = false
+      this.modals.showAddModal = false
     },
     editItem(){
       console.log('editItem', this.item)

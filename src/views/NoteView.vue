@@ -10,21 +10,24 @@
         </div>
 
         <Splitter style="height: 100%" class="mb-5" @resizeend="onResizeEnd">
-            <SplitterPanel :size="leftPanelSize" :minSize="100">
+            <SplitterPanel :size="leftPanelSize" :min-size="10">
                 <TreeView :items="treeData" />
             </SplitterPanel>
-            <SplitterPanel :size="100 - leftPanelSize" :min-size="100">
-                <div v-if="!treeData || treeData.length === 0" class="loader-container">
-                    <!-- Consider using a PrimeVue loader/skeleton here -->
-                    hello
-                </div>
-                <div v-else-if="currentNote === ''" class="note-not-selected-container">
+            <SplitterPanel :size="100 - leftPanelSize" :min-size="10">
+                <div v-if="selectedTreeItem === null" class="note-not-selected-container">
                     123
                 </div>
-                <div v-else class="note-container">
+                <div v-else-if="selectedTreeItem.type === 'folder'" class="note-not-selected-container">
+                    folder
+                </div>
+                <div v-else-if="selectedTreeItem.type === 'file'" class="note-container">
                     <Notes/>
                     <!-- TODO: implement view and edit switcher -->
                 </div>
+                <div v-else class="note-not-selected-container">
+                    should not happen
+                </div>
+
             </SplitterPanel>
         </Splitter>
     </div>
@@ -33,9 +36,11 @@
 <script>
 import Notes from '@/components/notes/Notes.vue'
 import TreeView from '@/components/notes/treeview/TreeView.vue';
+
 import { mapActions, mapState } from 'pinia';
 import { useNoteFolderStore } from '@/stores/noteFolder';
 import { useNoteStore } from '@/stores/note';
+import { useTreeStore } from '@/stores/tree';
 
 import SelectButton from 'primevue/selectbutton';
 import Splitter from 'primevue/splitter';
@@ -56,7 +61,6 @@ export default {
             leftPanelSize: 20, // Percentage for the left panel
             minWidthLeftContainer: 130, // Keep for reference if needed for minSize logic
             maxWidthLeftContainer: 400, // Keep for reference if needed
-            currentNote: 'test',
             sortedNotes: {},
             treeData: [],
             currentMode: 'view',
@@ -69,13 +73,14 @@ export default {
     computed: {
         ...mapState(useNoteFolderStore, ['noteFolders']),
         ...mapState(useNoteStore, ['notes']),
+        ...mapState(useTreeStore, ['selectedTreeItem']),
     },
     async created() {
         try {
             await this.fetchNoteFolders();
             await this.fetchNotes();
 
-            this.treeData = this.buildTree( this.noteFolders, this.notes)
+            // this.treeData = this.buildTree( this.noteFolders, this.notes)
             // Update treeData with the fetched folders if needed
         } catch (error) {
             console.error('Error fetching note folders:', error);
@@ -97,7 +102,6 @@ export default {
             // based on the container width, but PrimeVue handles resizing internally.
         },
         buildTree(){
-
             const folderMap = {}
             const tree = []
 
@@ -130,26 +134,32 @@ export default {
                     type: 'file',
                     content: null,
                 };
-                folderMap[note.folder_id].children.push(noteNode);
+                if (folderMap[note.folder_id]) {
+                    folderMap[note.folder_id].children.push(noteNode);
+                } else {
+                    console.warn(`Note "${note.name}" (ID: ${note.id}) has an invalid folder_id: ${note.folder_id}. It will not be displayed in the tree.`);
+                }
+            });
 
-            })
-
-            return tree
+            return tree;
         }
-        
     },
     watch: {
         noteFolders: {
-            handler() {
+            handler(newFolders, oldFolders) {
+                console.log('Watcher: noteFolders changed', newFolders);
                 this.treeData = this.buildTree();
+                console.log('Watcher: treeData after noteFolders change', this.treeData);
             },
-            immediate: true
+            immediate: true,
+            deep: true // Add deep watch if folder properties might change internally without the folder object itself being replaced
         },
         notes: {
-            handler() {
+            handler(newNotes, oldNotes) {
                 this.treeData = this.buildTree();
             },
-            immediate: true
+            immediate: true,
+            deep: true // Add deep watch as notes might be added to the array
         }
     }
 }
