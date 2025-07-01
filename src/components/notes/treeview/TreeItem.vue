@@ -2,7 +2,7 @@
   <div class="tree-item">
     <div class="item-label" @mouseenter="toggleFolderButtons" @mouseleave="toggleFolderButtons" @click="toggle" :class="{ 'selected': isSelected }">
     <div class="item-label-container">
-      <span v-if="isFolder" class="caret" :class="{ 'caret-down': isExpanded }">▶</span>
+      <span v-if="isFolderSelected" class="caret" :class="{ 'caret-down': isExpanded }">▶</span>
       <span v-else class="file-icon">📄</span>
       {{ item.name }}
     </div>
@@ -13,7 +13,7 @@
     </div>
   </div>
   
-  <div v-if="isFolder && isExpanded" class="children">
+  <div v-if="isFolderSelected && isExpanded" class="children">
     <TreeItem v-for="child in item.children" :key="child.name" :item="child" :depth="depth + 1"/>
   </div>
     
@@ -118,8 +118,11 @@ export default {
     ...mapState(useNoteFolderStore, ['noteFolders', 'selectedNoteFolder']),
     ...mapState(useNoteStore, ['fileFormats', 'selectedNote']),
     ...mapState(useTreeStore, ['selectedTreeItem']),
-    isFolder() {
+    isFolderSelected() {
       return ((this.item.children && this.item.children.length) || (this.item.type == 'folder'))
+    },
+    isFileSelected() {
+      return  this.item.type === 'file'
     },
     isSelected() {
       return this.item.id === this.selectedTreeItem?.id
@@ -130,14 +133,21 @@ export default {
     ...mapActions(useNoteStore, ['createNote', 'setSelectedNote']),
     ...mapActions(useTreeStore, ['setSelectedTreeItem']),
     toggle() {
-      if (this.isFolder) {
+      if (this.isFolderSelected) {
         this.isExpanded = !this.isExpanded
       }
 
-      if (this.isFolder) {
+      console.log('toggle', this.item)
+      console.log('this.item.type', this.item.type)
+      console.log('isFolderSelected', this.isFolderSelected)
+      console.log('isFileSelected', this.isFileSelected)
+
+      if (this.isFolderSelected) {
+        console.log('setSelectedNoteFolder', this.item)
         this.setSelectedNoteFolder(this.item.id)
       }
-      else  if(this.isFile){
+      else  if(this.isFileSelected){
+        console.log('setSelectedNote', this.item)
         this.setSelectedNote(this.item)
       }
 

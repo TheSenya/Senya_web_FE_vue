@@ -16,8 +16,6 @@
 
 <script>
 import TextEditor from '@/common/TextEditor.vue';
-import WebSocketService from '@/services/websocketService';
-import { debounce } from 'lodash';
 import { useAuthStore } from '@/stores/auth';
 import { mapState, mapActions } from 'pinia';
 import { useNoteFolderStore } from '@/stores/noteFolder';
@@ -36,36 +34,45 @@ export default {
         InputText,
         Button
     },
+
     data() {
         return {
             noteName: '',
             noteContent: '',
             noteId: null, // Will be set when creating/loading a note
-            lastReceivedUpdate: null,
-            testws: '123',
-            closews: false,
-            currentNote: null
         }
+    },
+    mounted() {
+        // The watcher with `immediate: true` now handles the initial state loading.
+        console.log('Notes component mounted.');
     },
     methods: {
         ...mapActions(useNoteFolderStore, ['createNoteFolder', 'deleteNoteFolder']),
         ...mapActions(useNoteStore, ['createNote', 'updateNote']),
-        ...mapState(useTreeStore, ['selectedTreeItem']),
+
+        updateLocalState(note) {
+            if (note) {
+                this.noteName = note.name;
+                this.noteContent = note.content;
+                this.noteId = note.id;
+            } else {
+                // Clear the form if no note is selected
+                this.noteName = '';
+                this.noteContent = '';
+                this.noteId = null;
+            }
+        },
+
         handleNameChange() {
-            this.sendUpdate({ name: this.noteName });
+            // this.sendUpdate({ name: this.noteName });
         },
 
         // Watch for content changes from TextEditor
         onContentChange(newContent) {
             this.noteContent = newContent; // Ensure noteContent is updated directly
-            this.sendUpdate({ content: newContent });
+            // this.sendUpdate({ content: newContent });
         },
 
-        // closeWebsocket() {
-        //     this.closews = !this.closews;
-        //     console.log('closews', this.closews);
-        //     WebSocketService.disconnect();
-        // },
         saveNote(){
             console.log('Save note', this.noteId, this.noteName, this.noteContent);
 
@@ -85,18 +92,14 @@ export default {
         ...mapState(useTreeStore, ['selectedTreeItem'])
     },
     watch: {
-        // selectedTreeItem: {
-        //     handler(newItem, oldItem) {
-        //         if (newItem.type === 'file') {
-        //             this.noteName = newItem.name
-        //             this.noteContent = newItem.content
-        //         }
-        //         console.log('selectedTreeItem', newItem)
-        //         console.log('selectedNote', this.selectedNote)
-        //         console.log('noteName', this.noteName)
-        //     },
-        //     immediate: true
-        // }
+        selectedNote: {
+            handler(newNote) {
+                console.log('Watcher: selectedNote changed to', newNote);
+                this.updateLocalState(newNote);
+            },
+            immediate: true,
+            deep: true
+        }
     }
 }
 </script>

@@ -15,19 +15,14 @@
             </SplitterPanel>
             <SplitterPanel :size="100 - leftPanelSize" :min-size="10">
                 <div v-if="selectedTreeItem === null" class="note-not-selected-container">
-                    123
+                    Select a note or folder.
                 </div>
                 <div v-else-if="selectedTreeItem.type === 'folder'" class="note-not-selected-container">
-                    folder
+                    You have selected a folder.
                 </div>
                 <div v-else-if="selectedTreeItem.type === 'file'" class="note-container">
-                    <Notes/>
-                    <!-- TODO: implement view and edit switcher -->
+                    <Notes />
                 </div>
-                <div v-else class="note-not-selected-container">
-                    should not happen
-                </div>
-
             </SplitterPanel>
         </Splitter>
     </div>
@@ -72,7 +67,7 @@ export default {
     },
     computed: {
         ...mapState(useNoteFolderStore, ['noteFolders']),
-        ...mapState(useNoteStore, ['notes']),
+        ...mapState(useNoteStore, ['notes'],),
         ...mapState(useTreeStore, ['selectedTreeItem']),
     },
     async created() {
@@ -85,6 +80,11 @@ export default {
         } catch (error) {
             console.error('Error fetching note folders:', error);
         }
+
+        console.log('Notes created', this.selectedTreeItem);
+        console.log('selectedNote', this.selectedNote);
+        console.log('noteName', this.noteName);
+        console.log('selectedTreeItem', this.selectedTreeItem);
     },
     mounted() {
         // Remove old event listeners for dragging
