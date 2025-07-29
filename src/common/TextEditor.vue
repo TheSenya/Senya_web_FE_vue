@@ -66,13 +66,17 @@ export default {
                         [{ 'header': 1 }, { 'header': 2 }],
                         [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                         [{ 'indent': '-1' }, { 'indent': '+1' }],
+                        [{ 'color': [] }, { 'background': [] }],
                         ['clean']
                     ]
                 },
-                placeholder: 'Write something...'
+                placeholder: 'Write something...',
+                formats: ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'indent', 'color', 'background']
             }
 
             this.editor = new Quill(this.$refs.editor, options)
+
+            console.log('editor', this.editor)  
 
             // Set initial content
             if (this.content) {
@@ -80,14 +84,14 @@ export default {
             }
 
             // Debounced change handler
-            // const emitChange = debounce((content) => {
-            //     this.$emit('update:content', content)
-            // }, 500) // 500ms delay
+            const emitChange = debounce((content) => {
+                this.$emit('update:content', content)
+            }, 500) // 500ms delay
 
             // Handle content changes
             this.editor.on('text-change', () => {
                 const content = this.editor.root.innerHTML
-                // emitChange(content)
+                emitChange(content)
             })
         }
     },
@@ -113,7 +117,7 @@ export default {
     height: var(--editor-height);
     min-width: var(--editor-min-width)px;
     min-height: var(--editor-min-height)px;
-
+    color: #000000;
     /* Light gray background */
 }
 

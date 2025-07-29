@@ -16,8 +16,21 @@ export const useNoteStore = defineStore('note', () => {
         fileFormats.value = data
     }
 
+    const fetchNote = async (noteId) => {
+        const response = await fetch(`${envVariables.API_BASE_URL}/note/${noteId}`, {
+            headers: {
+                'Authorization': `Bearer ${authStore.user.token}`
+            },
+            credentials: 'include'
+        })
+        const data = await response.json()
+        console.log('fetchNote data', data)
+        return data
+    }
+
     const fetchNotes = async () => {
-        const response = await fetch(`${envVariables.API_BASE_URL}/note/${authStore.user.id}`, {
+        const response = await fetch(`${envVariables.API_BASE_URL}/note`, {
+            method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authStore.user.token}`
             },
@@ -46,21 +59,40 @@ export const useNoteStore = defineStore('note', () => {
         notes.value.push(data)
     }
 
-    const updateNote = async (note) => {
+    const updateNote = async (noteId, title, content, format) => {
+        console.log('updateNote start', noteId, title, content, format)
 
+        const response = await fetch(`${envVariables.API_BASE_URL}/note/${noteId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({title, content, format}),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authStore.user.token}`
+            },
+            credentials: 'include'
+        })
+        const data = await response.json()
+        console.log('updated note', data)
+        return data
     }
 
     const deleteNote = async (note) => {
-
+        console.log('deleteNote start', note)
+        const response = await fetch(`${envVariables.API_BASE_URL}/note/${note.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authStore.user.token}`
+            },
+        })
     }
 
     const setSelectedNote = async (note) => {
         selectedNote.value = note
     }
     
+    
 
 
-
-    return { notes, selectedNote, fetchNotes, createNote, updateNote, deleteNote, setSelectedNote }
+    return { notes, selectedNote, fetchNotes, createNote, updateNote, deleteNote, setSelectedNote, fetchNote }
 })
 

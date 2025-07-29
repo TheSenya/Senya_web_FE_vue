@@ -73,14 +73,12 @@ export default {
             // this.sendUpdate({ content: newContent });
         },
 
-        saveNote(){
+        async saveNote(){
             console.log('Save note', this.noteId, this.noteName, this.noteContent);
 
-            this.createNote(this.noteName, this.noteContent);
-            // Implement save logic here
-            // Potentially send a specific 'save' message via WebSocket or call an API
+            await this.updateNote(this.note.id, this.noteName, this.noteContent, this.selectedNote?.format || 'text');
         },
-        deleteNote(){
+        async deleteNote(){
             console.log('Delete note', this.noteId);
             // Implement delete logic here
             // Potentially send a specific 'delete' message via WebSocket or call an API

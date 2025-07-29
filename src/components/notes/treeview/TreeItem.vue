@@ -130,9 +130,9 @@ export default {
   },
   methods: {
     ...mapActions(useNoteFolderStore, ['createNoteFolder', 'deleteNoteFolder', 'setSelectedNoteFolder']),
-    ...mapActions(useNoteStore, ['createNote', 'setSelectedNote']),
+    ...mapActions(useNoteStore, ['createNote', 'setSelectedNote', 'fetchNote']),
     ...mapActions(useTreeStore, ['setSelectedTreeItem']),
-    toggle() {
+    async toggle() {
       if (this.isFolderSelected) {
         this.isExpanded = !this.isExpanded
       }
@@ -148,7 +148,8 @@ export default {
       }
       else  if(this.isFileSelected){
         console.log('setSelectedNote', this.item)
-        this.setSelectedNote(this.item)
+        const note = await this.fetchNote(this.item.id)
+        this.setSelectedNote(note)
       }
 
       this.setSelectedTreeItem(this.item)
